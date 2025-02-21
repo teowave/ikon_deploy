@@ -1,0 +1,35 @@
+config.py
+.env
+# Virtual environment
+.venv/
+venv/
+ENV/
+*venv/
+*.venv/
+*virtualenv/
+.vscode/
+User/
+
+# Python bytecode
+__pycache__/
+*.py[cod]
+
+# Other common files to ignore
+*.log
+*.sqlite3
+.DS_Store
+
+# temp dirs
+temp_files/
+
+# docs and excel
+*.docx
+*.xlsx
+*.pdf
+*.pptx
+*.doc
+*.xls
+*.ppt
+
+#data dirs
+data/

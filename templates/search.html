@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ikon Semantic Search</title>
+
+    <!-- Include jQuery once -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .content-preview {
+            max-width: 75%;
+            word-wrap: break-word;
+        }
+
+        #spinner {
+            display: none;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"/>
+
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-light bg-light py-0 px-60 ">
+        <div class="container-fluid d-flex justify-content-center" style="padding-left: 50px; padding-right: 50px;">
+            <a class="nav-link me-3" href="{{ url_for('index') }}">Home</a>
+            <a class="nav-link" href="{{ url_for('search_page') }}">Semantic Search</a>
+            <!-- Add more navigation links as needed -->
+        </div>
+    </nav> 
+    
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-2 text-start" style="padding-left: 50px;" >
+                <img src="{{ url_for('static', filename='1631348766406.jpeg') }}" alt="Ikon Logo" class="img-fluid" style="max-height: 80px; min-height: 60px; min-width: 100px; padding-left: 20px; padding-right: 20px; border: 2px solid #ccc;">
+            </div>
+            <div class="col-12 d-flex justify-content-center align-items-center">
+                <p class="fs-1 fw-bold mb-0">Ikon Document Search</p>
+            </div>
+            <div class="col-12 d-flex justify-content-end align-items-center">
+                <div class="logo-container">
+                    <span class="fs-7 fw-normal">Powered by</span><span class="fs-5 fw-bold"> OVInsight</span>
+                    <img src="static/OVInsight_Logo_1024x1024 Background Removed.png" alt="OVInsight_Logo_1024x1024" class="img-fluid" style="max-height: 40px;"/>
+                </div>
+            </div>
+        </div>
+
+    <p></p>
+    <div class="d-flex justify-content-center">
+        <div class="text-center" style="max-width: 1200px;">
+            <form id="search-form">
+                <textarea id="search-query" name="search_query" rows="4" cols="50" required ></textarea>
+                       <!-- style="width: 95%; max-width: 800px; padding: 10px; font-size: 16px; margin: 0 auto; display: block; border-radius: 10px;"> -->
+           
+                <div id="file-type-filters" class="mb-3">
+                    <label class="me-3"><input type="checkbox" name="file_type" value="docx_from_pdf" checked> PDF</label>
+                    <label class="me-3"><input type="checkbox" name="file_type" value="docx" checked> DOCX</label>
+                    <label class="me-3"><input type="checkbox" name="file_type" value="xlsx" checked> XLSX</label>
+                    <label><input type="checkbox" name="file_type" value="msg" checked> MSG</label>
+                </div>
+                
+                <div>
+                    <button type="button" id="search-btn" class="btn btn-primary me-2">Search with Item limit</button>
+                    <button type="button" id="distance-search-btn" class="btn btn-primary">Search with Relevance Limit</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+
+    <div id="spinner"><div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div></div>
+
+    <div id="search-results"></div>
+
+    <script>
+    $(document).ready(function() {
+        // Handle Search button click
+        $('#search-btn').click(function(e) {
+            e.preventDefault();
+            var formData = $('#search-form').serialize();
+            showSpinner();
+            $.ajax({
+                url: '/semantic_search',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    hideSpinner();
+                    if (response.status === 'success') {
+                        if (response.rendered_html.trim() === "") {
+                            $('#search-results').html('<p></p><p>No results found for your search query - Try Search with Item Limit</p>');
+                        } else {
+                            $('#search-results').html(response.rendered_html);
+                        }
+                    } else {
+                        $('#search-results').html('<p>Error: ' + response.message + '</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideSpinner();
+                    console.error("AJAX Error:", status, error);
+                    $('#search-results').html('<p>Please enter a search query.</p>');
+                }
+            });
+        });
+        
+        // Handle Search with Distance Limit button click
+        $('#distance-search-btn').click(function(e) {
+            e.preventDefault();
+            var formData = $('#search-form').serialize();
+            showSpinner();
+            $.ajax({
+                url: '/semantic_search_distance',
+                type: 'POST',
+                data: formData,
+                success: function(response) {
+                    hideSpinner();
+                    if (response.status === 'success') {
+                        if (response.rendered_html.trim() === "") {
+                            $('#search-results').html('<p></p><p>No results found for your search query - Try Search with Item Limit</p>');
+                        } else {
+                            $('#search-results').html(response.rendered_html);
+                        }
+                    } else {
+                        $('#search-results').html('<p>Error: ' + response.message + '</p>');
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideSpinner();
+                    console.error("AJAX Error:", status, error);
+                    $('#search-results').html('<p>Please enter a search query.</p>');
+                }
+            });
+        });
+        
+        // Handle summarize button click
+        $(document).on('click', '#summarize-btn', function() {
+                var searchQuery = $('#search-query').val();
+                showSpinner();
+
+                $.ajax({
+                    url: '/summarize',
+                    type: 'POST',
+                    data: JSON.stringify({
+                        search_query: searchQuery
+                    }),
+                    contentType: 'application/json',
+                    success: function(response) {
+                        hideSpinner();
+                        if (response.summary) {
+                            $('#summary-text').html(marked.parse(response.summary));
+                            $('#summary-container').show();
+                        } else {
+                            $('#summary-text').html('<p>Error generating summary.</p>');
+                            $('#summary-container').show();
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        hideSpinner();
+                        console.error("AJAX Error:", status, error);
+                        $('#summary-text').html('<p>An error occurred during summarization.</p>');
+                        $('#summary-container').show();
+                    }
+                });
+            });
+
+        // Handle summarize with context button click
+        $(document).on('click', '#summarize-context-btn', function() {
+            var searchQuery = $('#search-query').val();
+            showSpinner();
+
+            $.ajax({
+                url: '/summarize_with_context',
+                type: 'POST',
+                data: JSON.stringify({
+                    search_query: searchQuery
+                }),
+                contentType: 'application/json',
+                success: function(response) {
+                    hideSpinner();
+                    if (response.summary) {
+                        $('#summary-text').html(marked.parse(response.summary));
+                        $('#summary-container').show();
+                    } else {
+                        $('#summary-text').html('<p>Error generating summary.</p>');
+                        $('#summary-container').show();
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideSpinner();
+                    console.error("AJAX Error:", status, error);
+                    $('#summary-text').html('<p>An error occurred during summarization with context.</p>');
+                    $('#summary-container').show();
+                }
+            });
+        });
+
+        function showSpinner() {
+            $('#spinner').show();
+            $('#summary-container').hide();
+        }
+
+        function hideSpinner() {
+            $('#spinner').hide();
+            $('#summary-container').show();
+        }
+    });
+    </script>
+    <script src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js">
+    </script>
+    </div>
+</body>
+</html>
