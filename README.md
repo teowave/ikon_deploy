@@ -23,5 +23,5 @@
      Example: app_flask_v18.py
    - in Environment add HTTP_PLATFORM_PORT and OPENAI_API_KEY with values
   
-7. Install Waitress
+7. Install Waitress?
    
