@@ -1,5 +1,4 @@
 pdf2image
-pytesseract
 psycopg2-binary
 numpy
 openai
@@ -12,7 +11,6 @@ python-docx
 python-dotenv
 flask
 flask_session
-openpyxl
 striprtf
 tiktoken
 waitress
