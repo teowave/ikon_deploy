@@ -1,5 +1,4 @@
 pdf2image
-psycopg2-binary
 numpy
 openai
 pandas
